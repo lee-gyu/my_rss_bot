@@ -11,7 +11,8 @@ SQLite(`data/rss.db`)에 등록된 RSS/Atom 피드를 확인하고 새 글을 Di
 ```sh
 pnpm start                 # 수집 + 발송 1회 (.env 필수: --env-file=.env)
 pnpm start --dry-run       # 수집은 실제로 저장하고, 발송만 생략해 메시지를 로그로 출력
-pnpm feed <add|list|remove|enable|disable> ...   # 피드 관리 CLI (src/cli.ts)
+pnpm feed <add|list|remove|enable|disable|test> ...   # 피드 관리 CLI (src/cli.ts)
+pnpm feed test [id] [--webhook URL]   # 실제 형식의 샘플 메시지 1건 발송 (items 상태 불변)
 pnpm typecheck             # tsc (noEmit, 타입 검사 전용)
 pnpm test                  # node --test "src/**/*.test.ts"
 

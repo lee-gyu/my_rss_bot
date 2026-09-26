@@ -31,6 +31,22 @@ export function listPendingItems(db: DatabaseSync): PendingItem[] {
     .all() as unknown as PendingItem[];
 }
 
+/** 피드의 가장 최근 글 (날짜 없는 글은 뒤로). 상태와 무관하게 조회한다. */
+export function getLatestItem(
+  db: DatabaseSync,
+  feedId: number,
+): Pick<NormalizedItem, 'title' | 'link' | 'publishedAt'> | undefined {
+  return db
+    .prepare(
+      `SELECT title, link, published_at AS publishedAt
+         FROM items
+        WHERE feed_id = ?
+        ORDER BY published_at IS NULL, published_at DESC, id DESC
+        LIMIT 1`,
+    )
+    .get(feedId) as unknown as Pick<NormalizedItem, 'title' | 'link' | 'publishedAt'> | undefined;
+}
+
 export function markItemSent(db: DatabaseSync, itemId: number, now: string): void {
   db.prepare(`UPDATE items SET status = 'sent', sent_at = ?, last_error = NULL WHERE id = ?`).run(now, itemId);
 }

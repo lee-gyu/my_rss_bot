@@ -28,10 +28,13 @@ pnpm feed list                                      # 목록 (마지막 성공 �
 pnpm feed disable <id>                              # 수집·발송 중단
 pnpm feed enable <id>
 pnpm feed remove <id>                               # 피드와 수집 기록 삭제
+pnpm feed test [id] [--webhook URL]                 # 샘플 메시지 발송 (DB 상태는 바뀌지 않음)
 ```
 
 `--webhook`을 지정하면 해당 피드의 글은 그 채널로 보내고, 지정하지 않으면 `DISCORD_WEB_HOOK`으로 보냅니다.
 Webhook URL은 Discord 채널 설정 → 연동 → 웹후크에서 만들 수 있습니다(`https://discord.com/api/webhooks/<id>/<token>`).
+
+`pnpm feed test`는 실제 발송과 같은 형식으로 메시지 하나를 보냅니다. id를 주면 그 피드에 저장된 최신 글을 그 피드의 webhook으로, id가 없으면 예시 글을 `DISCORD_WEB_HOOK`으로 보냅니다. `--webhook`을 주면 받을 곳을 바꿀 수 있어서, 피드에 연결하기 전에 webhook이 동작하는지 확인할 때도 쓸 수 있습니다.
 
 ## 실행
 
