@@ -43,6 +43,7 @@ describe('runOnce', () => {
   let webhookStatus: number;
   let posts: { url: string; content: string }[];
   let feedRequests: { url: string; headers: Headers }[];
+  let logs: string[];
 
   const fetch: FetchLike = async (url, init) => {
     if (init?.method === 'POST') {
@@ -80,9 +81,11 @@ describe('runOnce', () => {
   const addFeed = (url = FEED_URL, webhookUrl: string | null = null) => insertFeed(db, { url, name: null, webhookUrl });
 
   beforeEach(() => {
-    // 로그 출력으로 테스트 결과가 지저분해지지 않도록 막는다.
-    mock.method(console, 'log', () => {});
-    mock.method(console, 'error', () => {});
+    // 로그는 출력하지 않고 모아 둔다.
+    logs = [];
+    const capture = (line: unknown) => void logs.push(String(line));
+    mock.method(console, 'log', capture);
+    mock.method(console, 'error', capture);
     db = openDatabase(':memory:');
     feeds = new Map();
     webhookStatus = 204;
@@ -246,5 +249,56 @@ describe('runOnce', () => {
 
     assert.equal(posts.length, 0);
     assert.deepEqual(statuses(), { a: 'pending' });
+  });
+
+  describe('로그', () => {
+    // 시각(`2026-09-26 04:09:21 UTC`)과 레벨을 뗀 메시지
+    const messages = () => logs.map((line) => line.replace(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2} UTC (INFO|WARN|ERROR) /, '$1 '));
+
+    it('모든 줄이 UTC 시각으로 시작한다', async () => {
+      addFeed();
+      feeds.set(FEED_URL, { status: 200, xml: rss([post('a', 1)]) });
+      await run();
+
+      assert.ok(logs.length > 0);
+      for (const line of logs) assert.match(line, /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2} UTC (INFO|WARN|ERROR) /);
+    });
+
+    it('전송한 글마다 한 줄, 피드별로 전송 건수를 남긴다', async () => {
+      addFeed();
+      feeds.set(FEED_URL, { status: 200, xml: rss([post('a', 1)]) });
+      await run();
+      feeds.set(FEED_URL, { status: 200, xml: rss([post('c', 3), post('b', 2), post('a', 1)]) });
+      logs = [];
+
+      await run();
+
+      const lines = messages().filter((m) => !m.includes('완료'));
+      assert.equal(lines[0], 'INFO 피드 #1 (Example Blog): 새 글 2건');
+      assert.match(lines[1]!, /^INFO 글 #\d+ 전송 \(기본 채널\): \[Example Blog\] b 제목 https:\/\/example\.com\/b$/);
+      assert.match(lines[2]!, /^INFO 글 #\d+ 전송 \(기본 채널\): \[Example Blog\] c 제목 https:\/\/example\.com\/c$/);
+      assert.equal(lines[3], 'INFO 피드 #1 (Example Blog): 기본 채널에 2건 전송됨');
+      assert.equal(lines.length, 4);
+    });
+
+    it('발송 실패는 WARN으로 글 정보와 이유를 남기고, 피드 요약에 실패 건수를 붙인다', async () => {
+      addFeed(FEED_URL, 'https://discord.com/api/webhooks/2/custom-token');
+      feeds.set(FEED_URL, { status: 200, xml: rss([]) });
+      await run();
+      feeds.set(FEED_URL, { status: 200, xml: rss([post('a', 1)]) });
+      webhookStatus = 500;
+      logs = [];
+
+      await run();
+
+      const lines = messages();
+      assert.ok(
+        lines.some((m) =>
+          /^WARN 글 #\d+ 발송 실패 \(피드 전용 채널\): \[Example Blog\] a 제목 https:\/\/example\.com\/a — Discord webhook HTTP 500/.test(m),
+        ),
+      );
+      assert.ok(lines.includes('WARN 피드 #1 (Example Blog): 피드 전용 채널에 0건 전송됨, 1건 실패'));
+      assert.ok(logs.every((line) => !line.includes('custom-token')), 'webhook 토큰이 로그에 남으면 안 된다');
+    });
   });
 });

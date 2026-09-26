@@ -86,6 +86,21 @@ mise trust && mise install        # Node 24 (mise를 쓰지 않으면 Node 24 �
 - 치명적 오류(설정, DB)가 나면 exit code 1로 끝납니다. 피드별 수집 실패와 발송 실패는 로그만 남깁니다.
 - `logs/bot.log`는 logrotate에 등록하는 것을 권장합니다.
 
+### 로그
+
+로그 시각은 서버 시간대와 상관없이 **UTC**로 기록합니다. 전송한 글마다 한 줄씩, 그리고 피드별 전송 건수를 남깁니다.
+
+```
+2026-09-26 04:43:29 UTC INFO 피드 #1 (GeekNews): 새 글 2건
+2026-09-26 04:43:30 UTC INFO 글 #75 전송 (기본 채널): [GeekNews] 계획 모드는 죽었다 https://news.hada.io/topic?id=34304
+2026-09-26 04:43:32 UTC INFO 글 #74 전송 (기본 채널): [GeekNews] Show GN: 담월 – … https://news.hada.io/topic?id=34305
+2026-09-26 04:43:32 UTC INFO 피드 #1 (GeekNews): 기본 채널에 2건 전송됨
+2026-09-26 04:43:32 UTC INFO 완료 (2316ms) — 피드 2개 (변경 없음 0, 실패 0), 새 글 2건 / 발송 대기 2건 중 성공 2, 실패 0
+```
+
+- 수집 실패와 발송 실패는 `WARN`으로 남기며, 실패한 글의 제목·링크와 이유를 함께 기록합니다.
+- webhook URL에는 토큰이 들어 있어 로그에 남기지 않고, `기본 채널`(`DISCORD_WEB_HOOK`)과 `피드 전용 채널`(`--webhook`)로만 구분합니다.
+
 ## 개발
 
 ```sh

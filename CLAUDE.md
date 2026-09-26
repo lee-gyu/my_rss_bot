@@ -56,6 +56,7 @@ node --test --test-name-pattern="304" src/jobs/runOnce.test.ts  # 테스트 이�
 - **Discord 메시지** (`notify/discord.ts`): `content` 안에 `**[피드명]** 제목\n링크`를 넣습니다. `allowed_mentions: { parse: [] }`는 피드 제목의 `@everyone`이 실제 멘션이 되지 않게 막으므로 유지해야 합니다. 마크다운 이스케이프와 2000자 자르기도 여기서 처리합니다. 429 응답은 본문의 `retry_after`로 한 번 재시도합니다.
 - **인코딩:** `feed/fetchFeed.ts`가 Content-Type 헤더 또는 XML 선언의 charset으로 디코딩합니다(EUC-KR 피드 대응).
 - **종료 코드:** 설정·DB 같은 치명적 오류만 exit 1입니다. 피드 수집과 발송 실패는 로그만 남기고 exit 0입니다.
+- **로그** (`lib/logger.ts`): 시각은 `YYYY-MM-DD HH:MM:SS UTC`로 고정합니다(서버 시간대 무시). deliver는 전송한 글마다 `글 #id 전송 (채널): [피드] 제목 링크`를 남기고, 끝에 피드별 전송·실패 건수를 남깁니다. 채널은 webhook URL 대신 `기본 채널` / `피드 전용 채널`로 표기합니다. 로그 형식은 `runOnce.test.ts`의 `로그` 테스트가 검증하므로, 형식을 바꾸면 그 테스트도 함께 고칩니다.
 
 ### 의존성 주입과 테스트
 DI 컨테이너나 클래스 계층이 없습니다. `db`, `config`, `fetch`(`FetchLike`), `sleep`, `now`를 함수 인자로 넘깁니다. 테스트는 `openDatabase(':memory:')`와 가짜 `FetchLike`만으로 구성하고, mock 라이브러리는 쓰지 않습니다. 전체 흐름 시나리오(baseline, 중복, 재시도, 304, dry-run 등)는 `src/jobs/runOnce.test.ts`에 있으므로 동작을 바꾸면 여기에 시나리오를 추가합니다.

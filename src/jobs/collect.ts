@@ -10,7 +10,7 @@ import { insertItemIfAbsent } from '../db/itemRepository.ts';
 import { transaction } from '../db/transaction.ts';
 import { fetchFeed } from '../feed/fetchFeed.ts';
 import { parseFeed, type ParsedFeed } from '../feed/parseFeed.ts';
-import { errorMessage, logger } from '../lib/logger.ts';
+import { errorMessage, feedLabel, logger } from '../lib/logger.ts';
 import { mapLimit } from '../lib/mapLimit.ts';
 import type { Feed, FetchLike, ItemStatus, NormalizedItem } from '../types.ts';
 
@@ -52,7 +52,7 @@ export async function collectFeeds(deps: CollectDeps): Promise<CollectSummary> {
 }
 
 async function collectFeed(feed: Feed, deps: CollectDeps): Promise<FeedOutcome> {
-  const label = `피드 #${feed.id} (${feed.name ?? feed.url})`;
+  const label = feedLabel(feed);
   try {
     const fetched = await fetchFeed(feed, {
       fetch: deps.fetch,
