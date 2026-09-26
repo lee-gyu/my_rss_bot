@@ -60,16 +60,26 @@ cron ─▶ src/index.ts ─▶ runOnce()
 ## Linux 서버 배포 (crontab)
 
 ```sh
-mise which node   # cron은 PATH가 최소한이라 node 절대 경로가 필요합니다
-mkdir -p logs
-crontab -e
+git clone <저장소> /opt/my_rss_bot && cd /opt/my_rss_bot
+mise trust && mise install        # Node 24 (mise를 쓰지 않으면 Node 24 이상을 직접 설치)
+./linux-setup.sh                  # 매시 정각으로 현재 사용자 crontab에 등록
+./linux-setup.sh --schedule "*/30 * * * *"   # 실행 주기 변경
+./linux-setup.sh --uninstall      # 등록 해제
 ```
+
+`linux-setup.sh`가 하는 일은 다음과 같습니다. 다시 실행하면 기존 항목을 교체하므로 중복 등록되지 않습니다.
+- node의 **절대 경로**를 찾아 Node 24 이상인지 확인합니다. cron은 PATH가 최소한이라 mise shim이 동작하지 않기 때문입니다.
+- `node_modules`가 없으면 `pnpm install --prod --frozen-lockfile`을 실행합니다.
+- `.env`가 없으면 `.env.template`으로 만듭니다. `.env` 권한은 항상 `600`으로 맞추고, `DISCORD_WEB_HOOK`이 비어 있으면 경고합니다.
+- `src/cli.ts list`로 DB가 열리는지 확인합니다. 네트워크 요청이나 발송은 하지 않습니다.
+- 아래와 같은 항목을 crontab에 등록합니다. 끝의 `# my_rss_bot: <경로>` 주석이 교체·해제할 항목을 찾는 표식입니다.
 
 ```cron
-0 * * * * cd /opt/my_rss_bot && flock -n /tmp/my_rss_bot.lock /절대경로/node --env-file=.env src/index.ts >> logs/bot.log 2>&1
+0 * * * * cd /opt/my_rss_bot && /usr/bin/flock -n /opt/my_rss_bot/data/cron.lock /절대경로/node --env-file=.env src/index.ts >> /opt/my_rss_bot/logs/bot.log 2>&1 # my_rss_bot: /opt/my_rss_bot
 ```
 
-- `flock -n`은 이전 실행이 끝나지 않았으면 이번 실행을 건너뜁니다.
+- `flock -n`은 이전 실행이 끝나지 않았으면 이번 실행을 건너뜁니다. flock이 없으면 경고만 하고 flock 없이 등록합니다.
+- node를 업그레이드해 경로가 바뀌면 `./linux-setup.sh`를 다시 실행하세요.
 - 치명적 오류(설정, DB)가 나면 exit code 1로 끝납니다. 피드별 수집 실패와 발송 실패는 로그만 남깁니다.
 - `logs/bot.log`는 logrotate에 등록하는 것을 권장합니다.
 

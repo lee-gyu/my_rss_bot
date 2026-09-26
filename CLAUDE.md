@@ -17,7 +17,11 @@ pnpm test                  # node --test "src/**/*.test.ts"
 
 node --test src/jobs/runOnce.test.ts                            # 파일 하나
 node --test --test-name-pattern="304" src/jobs/runOnce.test.ts  # 테스트 이름으로 필터
+
+./linux-setup.sh [--schedule "<cron>"] [--uninstall]   # Linux 서버 crontab 등록/해제
 ```
+
+- `linux-setup.sh`는 다시 실행해도 안전합니다. 줄 끝의 `# my_rss_bot: <프로젝트 경로>` 주석으로 자기 항목을 찾아 교체하므로, cron 명령 형식을 바꿀 때는 이 표식을 유지해야 합니다. cron에서는 mise shim이 동작하지 않아 node 절대 경로를 사용합니다.
 
 - 빌드 단계, 린터, 포매터는 없습니다. 변경 후에는 `pnpm typecheck`와 `pnpm test`로 확인합니다.
 - `pnpm test --test-name-pattern=...`은 필터가 적용되지 않으므로, 이름으로 거를 때는 위처럼 `node --test`를 직접 실행합니다.
