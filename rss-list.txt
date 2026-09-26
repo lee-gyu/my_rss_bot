@@ -1,0 +1,4 @@
+https://news.44bits.io/feed.xml
+https://news.hada.io/rss/news
+https://hevinxx.github.io/hn-summary-and-translate/rss-ko.xml
+https://jser.info/ko/rss/

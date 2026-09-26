@@ -1,0 +1,30 @@
+{
+  "name": "my_rss_bot",
+  "version": "1.0.0",
+  "description": "SQLite에 등록된 RSS 피드의 새 글을 Discord Webhook으로 공유하는 봇",
+  "scripts": {
+    "start": "node --env-file=.env src/index.ts",
+    "feed": "node --env-file=.env src/cli.ts",
+    "typecheck": "tsc",
+    "test": "node --test \"src/**/*.test.ts\""
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devEngines": {
+    "packageManager": {
+      "name": "pnpm",
+      "version": "12.6.0",
+      "onFail": "download"
+    }
+  },
+  "packageManager": "pnpm@12.6.0",
+  "type": "module",
+  "devDependencies": {
+    "@types/node": "^24.13.6",
+    "typescript": "^7.0.2"
+  },
+  "dependencies": {
+    "rss-parser": "^3.13.0"
+  }
+}
