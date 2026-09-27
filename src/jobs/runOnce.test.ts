@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, it, mock } from 'node:test';
 import { loadConfig } from '../config.ts';
 import { openDatabase } from '../db/connection.ts';
 import { getFeed, insertFeed } from '../db/feedRepository.ts';
-import type { FetchLike } from '../types.ts';
+import type { DiscordChannelType, FetchLike } from '../types.ts';
 import { runOnce } from './runOnce.ts';
 
 const FEED_URL = 'https://example.com/feed.xml';
@@ -41,13 +41,14 @@ describe('runOnce', () => {
   let db: DatabaseSync;
   let feeds: Map<string, FakeFeed>;
   let webhookStatus: number;
-  let posts: { url: string; content: string }[];
+  let posts: { url: string; content: string; threadName: string | undefined }[];
   let feedRequests: { url: string; headers: Headers }[];
   let logs: string[];
 
   const fetch: FetchLike = async (url, init) => {
     if (init?.method === 'POST') {
-      posts.push({ url, content: JSON.parse(String(init.body)).content });
+      const body = JSON.parse(String(init.body));
+      posts.push({ url, content: body.content, threadName: body.thread_name });
       return new Response(webhookStatus === 204 ? null : 'error', { status: webhookStatus });
     }
     const headers = new Headers(init?.headers);
@@ -61,10 +62,10 @@ describe('runOnce', () => {
     });
   };
 
-  const run = (options: { dryRun?: boolean } = {}) =>
+  const run = (options: { dryRun?: boolean; channelType?: DiscordChannelType } = {}) =>
     runOnce({
       db,
-      config: loadConfig({ DISCORD_WEB_HOOK: DEFAULT_WEBHOOK }),
+      config: loadConfig({ DISCORD_WEB_HOOK: DEFAULT_WEBHOOK, DISCORD_CHANNEL_TYPE: options.channelType }),
       fetch,
       sleep: async () => {},
       now: () => new Date(),
@@ -124,11 +125,44 @@ describe('runOnce', () => {
       ['**[Example Blog]** b 제목\nhttps://example.com/b', '**[Example Blog]** c 제목\nhttps://example.com/c'],
     );
     assert.ok(posts.every((p) => p.url === DEFAULT_WEBHOOK));
+    assert.ok(posts.every((p) => p.threadName === undefined), '일반 채널에는 thread_name을 보내면 안 된다');
     assert.deepEqual(summary.deliver, { pending: 2, sent: 2, failed: 0 });
     assert.deepEqual(statuses(), { a: 'skipped', b: 'sent', c: 'sent' });
 
     await run();
     assert.equal(posts.length, 2, '같은 글을 다시 발송하면 안 된다');
+  });
+
+  it('forum 타입이면 글마다 제목으로 새 포스트를 만들고, 본문에는 피드명과 링크를 넣는다', async () => {
+    addFeed();
+    feeds.set(FEED_URL, { status: 200, xml: rss([post('a', 1)]) });
+    await run({ channelType: 'forum' });
+
+    feeds.set(FEED_URL, { status: 200, xml: rss([post('c', 3), post('b', 2), post('a', 1)]) });
+    const summary = await run({ channelType: 'forum' });
+
+    assert.deepEqual(
+      posts.map((p) => [p.threadName, p.content]),
+      [
+        ['b 제목', '**[Example Blog]**\nhttps://example.com/b'],
+        ['c 제목', '**[Example Blog]**\nhttps://example.com/c'],
+      ],
+    );
+    assert.deepEqual(summary.deliver, { pending: 2, sent: 2, failed: 0 });
+    assert.deepEqual(statuses(), { a: 'skipped', b: 'sent', c: 'sent' });
+  });
+
+  it('forum 타입 dry-run은 포스트 제목과 본문을 로그로 출력한다', async () => {
+    addFeed();
+    feeds.set(FEED_URL, { status: 200, xml: rss([]) });
+    await run({ channelType: 'forum' });
+    feeds.set(FEED_URL, { status: 200, xml: rss([post('a', 1)]) });
+    logs = [];
+
+    await run({ channelType: 'forum', dryRun: true });
+
+    assert.equal(posts.length, 0);
+    assert.ok(logs.some((line) => line.endsWith('[포스트 제목] a 제목\n**[Example Blog]**\nhttps://example.com/a')));
   });
 
   it('한 번에 새 글이 너무 많으면 최신 5건만 발송하고 나머지는 skipped 처리한다', async () => {

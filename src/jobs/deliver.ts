@@ -2,7 +2,7 @@ import type { DatabaseSync } from 'node:sqlite';
 import type { Config } from '../config.ts';
 import { listPendingItems, markItemSent, recordDeliveryFailure } from '../db/itemRepository.ts';
 import { errorMessage, feedLabel, logger } from '../lib/logger.ts';
-import { formatItemMessage, postToDiscord } from '../notify/discord.ts';
+import { formatItemMessage, postToDiscord, previewMessage } from '../notify/discord.ts';
 import type { FetchLike, PendingItem, Sleep } from '../types.ts';
 
 export interface DeliverDeps {
@@ -36,13 +36,13 @@ export async function deliverPending(deps: DeliverDeps): Promise<DeliverSummary>
   const perFeed = new Map<number, FeedDeliveryStats>();
 
   for (const item of items) {
-    const message = formatItemMessage(item);
+    const message = formatItemMessage(item, deps.config.channelType);
     const webhookUrl = item.webhookUrl ?? deps.config.defaultWebhookUrl;
     // webhook URL에는 토큰이 들어 있어 로그에는 어느 쪽 webhook인지만 남긴다.
     const channel = item.webhookUrl ? '피드 전용 채널' : '기본 채널';
 
     if (deps.dryRun) {
-      logger.info(`[dry-run] 글 #${item.id} (${webhookUrl ? channel : 'webhook 미설정'})\n${message.content}`);
+      logger.info(`[dry-run] 글 #${item.id} (${webhookUrl ? channel : 'webhook 미설정'})\n${previewMessage(message)}`);
       continue;
     }
 

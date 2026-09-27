@@ -10,7 +10,7 @@ import { parseFeed } from './feed/parseFeed.ts';
 import { saveFeedSnapshot } from './jobs/collect.ts';
 import { errorMessage } from './lib/logger.ts';
 import { scriptArgs } from './lib/scriptArgs.ts';
-import { formatItemMessage, postToDiscord } from './notify/discord.ts';
+import { formatItemMessage, postToDiscord, previewMessage } from './notify/discord.ts';
 import type { PendingItem } from './types.ts';
 
 const USAGE = `사용법: pnpm feed <명령> [옵션]
@@ -168,8 +168,8 @@ async function sendTestMessage(
     throw new UsageError('보낼 webhook이 없습니다. DISCORD_WEB_HOOK을 설정하거나 --webhook을 지정하세요.');
   }
 
-  const message = formatItemMessage(item);
-  console.log(`보낼 메시지:\n${message.content}\n`);
+  const message = formatItemMessage(item, config.channelType);
+  console.log(`보낼 메시지 (${config.channelType}):\n${previewMessage(message)}\n`);
   await postToDiscord(webhookUrl, message, { fetch, sleep, timeoutMs: config.webhookTimeoutMs });
   console.log('발송 완료. Discord 채널을 확인하세요.');
 }

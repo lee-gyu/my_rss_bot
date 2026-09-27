@@ -18,6 +18,7 @@ cp .env.template .env   # DISCORD_WEB_HOOK에 기본 Discord Webhook URL 입력
 | 환경 변수 | 설명 | 기본값 |
 |---|---|---|
 | `DISCORD_WEB_HOOK` | 피드에 전용 webhook이 없을 때 쓰는 기본 Webhook | 없음 |
+| `DISCORD_CHANNEL_TYPE` | Webhook이 연결된 채널 종류. `channel`(일반 텍스트 채널) 또는 `forum`(포럼 채널) | `channel` |
 | `DATABASE_PATH` | SQLite 파일 경로 | `./data/rss.db` |
 
 ## 피드 관리
@@ -33,6 +34,8 @@ pnpm feed test [id] [--webhook URL]                 # 샘플 메시지 발송 (D
 
 `--webhook`을 지정하면 해당 피드의 글은 그 채널로 보내고, 지정하지 않으면 `DISCORD_WEB_HOOK`으로 보냅니다.
 Webhook URL은 Discord 채널 설정 → 연동 → 웹후크에서 만들 수 있습니다(`https://discord.com/api/webhooks/<id>/<token>`).
+
+Webhook이 포럼 채널에 연결되어 있으면 `.env`에 `DISCORD_CHANNEL_TYPE=forum`을 설정합니다. 이 값은 기본 webhook과 피드 전용 webhook에 모두 적용되므로, 모든 webhook이 같은 종류의 채널이어야 합니다. 종류가 맞지 않으면 Discord가 HTTP 400을 반환해 발송에 실패합니다(포럼 채널에 `channel`로 보내면 `Webhooks posted to forum channels must have a thread_name or thread_id`).
 
 `pnpm feed test`는 실제 발송과 같은 형식으로 메시지 하나를 보냅니다. id를 주면 그 피드에 저장된 최신 글을 그 피드의 webhook으로, id가 없으면 예시 글을 `DISCORD_WEB_HOOK`으로 보냅니다. `--webhook`을 주면 받을 곳을 바꿀 수 있어서, 피드에 연결하기 전에 webhook이 동작하는지 확인할 때도 쓸 수 있습니다.
 
@@ -57,7 +60,8 @@ cron ─▶ src/index.ts ─▶ runOnce()
 - **재시도:** 발송에 실패한 글은 `pending`으로 남아 다음 실행 때 다시 보냅니다. 5회 실패하면 `failed`로 전환합니다.
 - **장애 격리:** 한 피드의 수집이 실패해도 다른 피드는 계속 처리하며, 실패 내용은 `pnpm feed list`에서 확인할 수 있습니다.
 - **요청 절약:** ETag/Last-Modified로 조건부 요청을 보내 변경 없는 피드는 304로 건너뜁니다. EUC-KR 피드도 자동으로 디코딩합니다.
-- **메시지 형식:** `**[피드명]** 제목` 아래 줄에 원문 링크를 붙여 Discord가 미리보기를 만들게 합니다. 제목의 마크다운 문자는 이스케이프하고, `allowed_mentions`로 멘션을 막아 제목에 `@everyone`이 있어도 알림이 가지 않습니다. 2000자 제한에 맞춰 제목을 자릅니다.
+- **메시지 형식 (`channel`):** `**[피드명]** 제목` 아래 줄에 원문 링크를 붙여 Discord가 미리보기를 만들게 합니다. 제목의 마크다운 문자는 이스케이프하고, `allowed_mentions`로 멘션을 막아 제목에 `@everyone`이 있어도 알림이 가지 않습니다. 2000자 제한에 맞춰 제목을 자릅니다.
+- **메시지 형식 (`forum`):** 글마다 포럼 포스트를 새로 만듭니다. 글 제목이 포스트 제목이 되고(100자 제한에 맞춰 자르고, 줄바꿈은 공백으로 바꿉니다), 본문에는 `**[피드명]**`과 원문 링크만 넣습니다.
 - **rate limit 대응:** 같은 Webhook에는 2초 간격으로 보내고(Discord 채널당 분당 30건 제한), 429 응답이 오면 `retry_after`만큼 기다린 뒤 한 번 재시도합니다.
 
 ## Linux 서버 배포 (crontab)

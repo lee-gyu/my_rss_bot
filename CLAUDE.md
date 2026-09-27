@@ -26,7 +26,7 @@ node --test --test-name-pattern="304" src/jobs/runOnce.test.ts  # 테스트 이�
 
 - 빌드 단계, 린터, 포매터는 없습니다. 변경 후에는 `pnpm typecheck`와 `pnpm test`로 확인합니다.
 - `pnpm test --test-name-pattern=...`은 필터가 적용되지 않으므로, 이름으로 거를 때는 위처럼 `node --test`를 직접 실행합니다.
-- 환경 변수는 `DISCORD_WEB_HOOK`(기본 webhook)과 `DATABASE_PATH`(기본값 `./data/rss.db`) 두 개뿐입니다. 타임아웃, 동시성, 발송 간격, 재시도 횟수 같은 튜닝 값은 `src/config.ts`의 상수입니다.
+- 환경 변수는 `DISCORD_WEB_HOOK`(기본 webhook), `DISCORD_CHANNEL_TYPE`(`channel` | `forum`, 기본값 `channel`), `DATABASE_PATH`(기본값 `./data/rss.db`) 세 개뿐입니다. 타임아웃, 동시성, 발송 간격, 재시도 횟수 같은 튜닝 값은 `src/config.ts`의 상수입니다.
 
 ## 런타임 제약 (Node 24 타입 스트리핑)
 
@@ -53,7 +53,7 @@ node --test --test-name-pattern="304" src/jobs/runOnce.test.ts  # 테스트 이�
 ### 그 밖의 흐름
 - **webhook 결정:** `feeds.webhook_url ?? DISCORD_WEB_HOOK` (deliver에서 결정).
 - **guid 결정:** `guid` → Atom `id` → `link` → `sha256(title|publishedAt)` (`feed/parseFeed.ts`). 이 규칙을 바꾸면 기존 글이 새 글로 인식되어 재발송될 수 있습니다.
-- **Discord 메시지** (`notify/discord.ts`): `content` 안에 `**[피드명]** 제목\n링크`를 넣습니다. `allowed_mentions: { parse: [] }`는 피드 제목의 `@everyone`이 실제 멘션이 되지 않게 막으므로 유지해야 합니다. 마크다운 이스케이프와 2000자 자르기도 여기서 처리합니다. 429 응답은 본문의 `retry_after`로 한 번 재시도합니다.
+- **Discord 메시지** (`notify/discord.ts`): `channel` 타입은 `content` 안에 `**[피드명]** 제목\n링크`를 넣습니다. `forum` 타입은 제목을 `thread_name`(100자, 마크다운 이스케이프 없음)으로 보내 글마다 새 포스트를 만들고, `content`에는 `**[피드명]**\n링크`만 넣습니다. Discord는 포럼 채널에 `thread_name`이 없거나 일반 채널에 `thread_name`이 있으면 400을 반환하므로, `DISCORD_CHANNEL_TYPE`은 기본 webhook과 피드 전용 webhook에 똑같이 적용됩니다. `allowed_mentions: { parse: [] }`는 피드 제목의 `@everyone`이 실제 멘션이 되지 않게 막으므로 유지해야 합니다. 마크다운 이스케이프와 2000자 자르기도 여기서 처리합니다. 429 응답은 본문의 `retry_after`로 한 번 재시도합니다.
 - **인코딩:** `feed/fetchFeed.ts`가 Content-Type 헤더 또는 XML 선언의 charset으로 디코딩합니다(EUC-KR 피드 대응).
 - **종료 코드:** 설정·DB 같은 치명적 오류만 exit 1입니다. 피드 수집과 발송 실패는 로그만 남기고 exit 0입니다.
 - **로그** (`lib/logger.ts`): 시각은 `YYYY-MM-DD HH:MM:SS UTC`로 고정합니다(서버 시간대 무시). deliver는 전송한 글마다 `글 #id 전송 (채널): [피드] 제목 링크`를 남기고, 끝에 피드별 전송·실패 건수를 남깁니다. 채널은 webhook URL 대신 `기본 채널` / `피드 전용 채널`로 표기합니다. 로그 형식은 `runOnce.test.ts`의 `로그` 테스트가 검증하므로, 형식을 바꾸면 그 테스트도 함께 고칩니다.
