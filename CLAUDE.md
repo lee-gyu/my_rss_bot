@@ -26,7 +26,7 @@ node --test --test-name-pattern="304" src/jobs/runOnce.test.ts  # 테스트 이�
 
 - 빌드 단계, 린터, 포매터는 없습니다. 변경 후에는 `pnpm typecheck`와 `pnpm test`로 확인합니다.
 - `pnpm test --test-name-pattern=...`은 필터가 적용되지 않으므로, 이름으로 거를 때는 위처럼 `node --test`를 직접 실행합니다.
-- 환경 변수는 `DISCORD_WEB_HOOK`(기본 webhook), `DISCORD_CHANNEL_TYPE`(`channel` | `forum`, 기본값 `channel`), `DATABASE_PATH`(기본값 `./data/rss.db`) 세 개뿐입니다. 타임아웃, 동시성, 발송 간격, 재시도 횟수 같은 튜닝 값은 `src/config.ts`의 상수입니다.
+- 환경 변수는 `DISCORD_WEB_HOOK`(기본 webhook), `DISCORD_CHANNEL_TYPE`(`channel` | `forum`, 기본값 `channel`), `DATABASE_PATH`(기본값 `./data/rss.db`), `FEATURE_SEND_CHANEL`(`1`이면 수집 실행에서 발송을 건너뜀, 기본값 `0`)입니다. 타임아웃, 동시성, 발송 간격, 재시도 횟수 같은 튜닝 값은 `src/config.ts`의 상수입니다.
 
 ## 런타임 제약 (Node 24 타입 스트리핑)
 

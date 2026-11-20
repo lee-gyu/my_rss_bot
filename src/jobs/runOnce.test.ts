@@ -62,10 +62,14 @@ describe('runOnce', () => {
     });
   };
 
-  const run = (options: { dryRun?: boolean; channelType?: DiscordChannelType } = {}) =>
+  const run = (options: { dryRun?: boolean; channelType?: DiscordChannelType; sendChannelFlag?: string } = {}) =>
     runOnce({
       db,
-      config: loadConfig({ DISCORD_WEB_HOOK: DEFAULT_WEBHOOK, DISCORD_CHANNEL_TYPE: options.channelType }),
+      config: loadConfig({
+        DISCORD_WEB_HOOK: DEFAULT_WEBHOOK,
+        DISCORD_CHANNEL_TYPE: options.channelType,
+        FEATURE_SEND_CHANEL: options.sendChannelFlag,
+      }),
       fetch,
       sleep: async () => {},
       now: () => new Date(),
@@ -152,14 +156,14 @@ describe('runOnce', () => {
     assert.deepEqual(statuses(), { a: 'skipped', b: 'sent', c: 'sent' });
   });
 
-  it('forum 타입 dry-run은 포스트 제목과 본문을 로그로 출력한다', async () => {
+  it('발송이 비활성화되어도 forum 타입 dry-run은 포스트 제목과 본문을 로그로 출력한다', async () => {
     addFeed();
     feeds.set(FEED_URL, { status: 200, xml: rss([]) });
     await run({ channelType: 'forum' });
     feeds.set(FEED_URL, { status: 200, xml: rss([post('a', 1)]) });
     logs = [];
 
-    await run({ channelType: 'forum', dryRun: true });
+    await run({ channelType: 'forum', dryRun: true, sendChannelFlag: '1' });
 
     assert.equal(posts.length, 0);
     assert.ok(logs.some((line) => line.endsWith('[포스트 제목] a 제목\n**[Example Blog]**\nhttps://example.com/a')));
@@ -283,6 +287,27 @@ describe('runOnce', () => {
 
     assert.equal(posts.length, 0);
     assert.deepEqual(statuses(), { a: 'pending' });
+  });
+
+  it('FEATURE_SEND_CHANEL=1이면 새 글을 저장하고 발송 대기 글은 설정을 되돌릴 때까지 유지한다', async () => {
+    addFeed();
+    feeds.set(FEED_URL, { status: 200, xml: rss([]) });
+    await run();
+    feeds.set(FEED_URL, { status: 200, xml: rss([post('a', 1)]) });
+    await run({ dryRun: true });
+
+    feeds.set(FEED_URL, { status: 200, xml: rss([post('b', 2), post('a', 1)]) });
+    const summary = await run({ sendChannelFlag: '1' });
+
+    assert.equal(summary.collect.newItems, 1);
+    assert.equal(summary.deliver, null);
+    assert.equal(posts.length, 0);
+    assert.deepEqual(statuses(), { a: 'pending', b: 'pending' });
+
+    await run({ sendChannelFlag: '0' });
+
+    assert.equal(posts.length, 2);
+    assert.deepEqual(statuses(), { a: 'sent', b: 'sent' });
   });
 
   describe('로그', () => {

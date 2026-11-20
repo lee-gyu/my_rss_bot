@@ -20,6 +20,7 @@ cp .env.template .env   # DISCORD_WEB_HOOK에 기본 Discord Webhook URL 입력
 | `DISCORD_WEB_HOOK` | 피드에 전용 webhook이 없을 때 쓰는 기본 Webhook | 없음 |
 | `DISCORD_CHANNEL_TYPE` | Webhook이 연결된 채널 종류. `channel`(일반 텍스트 채널) 또는 `forum`(포럼 채널) | `channel` |
 | `DATABASE_PATH` | SQLite 파일 경로 | `./data/rss.db` |
+| `FEATURE_SEND_CHANEL` | `1`이면 `pnpm start`에서 글을 DB에 저장하고 Discord 발송을 건너뜁니다. | `0` |
 
 ## 피드 관리
 
@@ -45,6 +46,8 @@ Webhook이 포럼 채널에 연결되어 있으면 `.env`에 `DISCORD_CHANNEL_TY
 pnpm start             # 수집 + 발송 1회
 pnpm start --dry-run   # 수집은 하되, 발송하지 않고 보낼 메시지를 로그로 출력 (pending 유지)
 ```
+
+`FEATURE_SEND_CHANEL=1`로 실행하면 기존 발송 대기 글과 이번에 발송 대기로 저장된 글은 `pending`으로 남습니다. `0`으로 되돌리면 다음 실행에서 대기 중인 글도 발송합니다. `--dry-run`으로는 발송이 비활성화된 상태에서도 메시지를 미리 볼 수 있습니다.
 
 ## 동작 방식
 

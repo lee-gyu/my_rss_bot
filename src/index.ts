@@ -25,10 +25,13 @@ async function main(): Promise<void> {
       now: () => new Date(),
       dryRun: values['dry-run'],
     });
+    const deliverySummary = deliver
+      ? `발송 대기 ${deliver.pending}건 중 성공 ${deliver.sent}, 실패 ${deliver.failed}`
+      : 'Discord 발송 비활성화';
     logger.info(
       `완료 (${Date.now() - startedAt}ms) — ` +
         `피드 ${collect.feeds}개 (변경 없음 ${collect.notModified}, 실패 ${collect.failed}), 새 글 ${collect.newItems}건 / ` +
-        `발송 대기 ${deliver.pending}건 중 성공 ${deliver.sent}, 실패 ${deliver.failed}` +
+        deliverySummary +
         (values['dry-run'] ? ' [dry-run]' : ''),
     );
   } finally {

@@ -5,11 +5,11 @@ export type RunDeps = CollectDeps & DeliverDeps;
 
 export interface RunSummary {
   collect: CollectSummary;
-  deliver: DeliverSummary;
+  deliver: DeliverSummary | null;
 }
 
 export async function runOnce(deps: RunDeps): Promise<RunSummary> {
   const collect = await collectFeeds(deps);
-  const deliver = await deliverPending(deps);
+  const deliver = deps.config.discordDeliveryDisabled && !deps.dryRun ? null : await deliverPending(deps);
   return { collect, deliver };
 }

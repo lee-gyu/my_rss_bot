@@ -6,6 +6,8 @@ export interface Config {
   defaultWebhookUrl: string | null;
   /** webhook이 연결된 채널 종류. 피드 전용 webhook에도 같은 값을 적용한다. */
   channelType: DiscordChannelType;
+  /** 수집 실행에서 Discord 발송을 건너뛴다. */
+  discordDeliveryDisabled: boolean;
   fetchTimeoutMs: number;
   fetchConcurrency: number;
   userAgent: string;
@@ -32,6 +34,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     databasePath: env.DATABASE_PATH?.trim() || './data/rss.db',
     defaultWebhookUrl,
     channelType,
+    discordDeliveryDisabled: env.FEATURE_SEND_CHANEL?.trim() === '1',
     fetchTimeoutMs: 15_000,
     fetchConcurrency: 4,
     userAgent: 'my_rss_bot/1.0',

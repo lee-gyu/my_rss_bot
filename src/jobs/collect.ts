@@ -74,7 +74,7 @@ async function collectFeed(feed: Feed, deps: CollectDeps): Promise<FeedOutcome> 
       logger.info(`${label}: 첫 수집이라 기존 글 ${result.skipped}건을 알림 없이 기록했습니다.`);
     } else if (result.skipped > 0) {
       logger.warn(
-        `${label}: 새 글이 ${result.pending + result.skipped}건이라 최신 ${result.pending}건만 발송하고 ${result.skipped}건은 건너뜁니다.`,
+        `${label}: 새 글이 ${result.pending + result.skipped}건이라 최신 ${result.pending}건을 발송 대기로, 나머지 ${result.skipped}건을 skipped로 기록했습니다.`,
       );
     } else if (result.pending > 0) {
       logger.info(`${label}: 새 글 ${result.pending}건`);
