@@ -100,8 +100,8 @@ info "node: ${NODE_BIN} ($("$NODE_BIN" --version))"
 if [[ ! -d node_modules/rss-parser ]]; then
   command -v pnpm >/dev/null 2>&1 ||
     die "의존성이 설치되어 있지 않고 pnpm도 없습니다. 'mise install' 또는 'corepack enable' 후 다시 실행하세요."
-  info "의존성 설치: pnpm install --prod --frozen-lockfile"
-  pnpm install --prod --frozen-lockfile
+  info "의존성 설치: pnpm --filter my_rss_bot --fail-if-no-match install --prod --frozen-lockfile"
+  pnpm --filter my_rss_bot --fail-if-no-match install --prod --frozen-lockfile
 fi
 
 # ---------------------------------------------------------------- .env

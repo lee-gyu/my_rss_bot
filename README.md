@@ -76,7 +76,7 @@ mise trust && mise install        # Node 24 (mise를 쓰지 않으면 Node 24 �
 
 `linux-setup.sh`가 하는 일은 다음과 같습니다. 다시 실행하면 기존 항목을 교체하므로 중복 등록되지 않습니다.
 - node의 **절대 경로**를 찾아 Node 24 이상인지 확인합니다. cron은 PATH가 최소한이라 mise shim이 동작하지 않기 때문입니다.
-- `node_modules`가 없으면 `pnpm install --prod --frozen-lockfile`을 실행합니다.
+- `node_modules/rss-parser`가 없으면 `pnpm --filter my_rss_bot --fail-if-no-match install --prod --frozen-lockfile`을 실행해 봇의 운영 의존성을 설치합니다.
 - `.env`가 없으면 `.env.template`으로 만듭니다. `.env` 권한은 항상 `600`으로 맞추고, `DISCORD_WEB_HOOK`이 비어 있으면 경고합니다.
 - `src/cli.ts list`로 DB가 열리는지 확인합니다. 네트워크 요청이나 발송은 하지 않습니다.
 - 아래와 같은 항목을 crontab에 등록합니다. 끝의 `# my_rss_bot: <경로>` 주석이 교체·해제할 항목을 찾는 표식입니다.
@@ -124,3 +124,19 @@ src/
 ├─ jobs/                    # collect → deliver, runOnce
 └─ lib/                     # logger, mapLimit, scriptArgs
 ```
+
+## 웹 앱
+
+`app/`은 Next.js App Router와 shadcn/ui를 사용하는 pnpm 워크스페이스 패키지입니다. 현재 첫 화면을 제공하며, `data/rss.db` 연결은 다음 단계에서 추가합니다.
+
+저장소 루트에서 실행합니다.
+
+```sh
+pnpm install
+pnpm --filter rss-web dev     # 개발 서버
+pnpm --filter rss-web lint    # 웹 앱 린트 검사
+pnpm --filter rss-web build   # 운영 빌드
+pnpm --filter rss-web start   # 운영 빌드 실행
+```
+
+개발 서버를 실행한 뒤 [localhost:3000](http://localhost:3000)에서 확인할 수 있습니다.
