@@ -22,7 +22,7 @@
   "type": "module",
   "devDependencies": {
     "@types/node": "^24.13.6",
-    "typescript": "^7.0.2"
+    "typescript": "^5.9.3"
   },
   "dependencies": {
     "rss-parser": "^3.13.0"
