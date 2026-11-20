@@ -173,6 +173,9 @@ importers:
       '@types/node':
         specifier: ^24.13.6
         version: 24.13.6
+      sqlite-viewer:
+        specifier: https://codeload.github.com/zaydek/sqlite-viewer/tar.gz/f5dd6afc70df7716a63e42fcf35aeaae1fd8ae22
+        version: https://codeload.github.com/zaydek/sqlite-viewer/tar.gz/f5dd6afc70df7716a63e42fcf35aeaae1fd8ae22
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
@@ -2515,6 +2518,12 @@ packages:
   source-map@0.6.1:
     resolution: {integrity: sha512-UjgapumWlbMhkBgzT7Ykc5YXUT46F0iKu8SGXq0bcwP5dz/h0Plj6enJqjz1Zbq2l5WaqYnrVbwWOWMyF3F47g==}
     engines: {node: '>=0.10.0'}
+
+  sqlite-viewer@https://codeload.github.com/zaydek/sqlite-viewer/tar.gz/f5dd6afc70df7716a63e42fcf35aeaae1fd8ae22:
+    resolution: {gitHosted: true, integrity: sha512-xqJqXRd0xp0SWIgEc6Zml/JoHizXUmWCnFw6yA33IZ8yN3gU7WfApYh/yaxXWdSyHxm14xoba3W76Bt6pwncDw==, tarball: https://codeload.github.com/zaydek/sqlite-viewer/tar.gz/f5dd6afc70df7716a63e42fcf35aeaae1fd8ae22}
+    version: 0.1.0
+    engines: {node: '>=23.8.0'}
+    hasBin: true
 
   stable-hash@0.0.5:
     resolution: {integrity: sha512-+L3ccpzibovGXFK+Ap/f8LOS0ahMrHTf3xu7mMLSpEGU0EO9ucaysSylKo9eRDFNhWve/y275iPmIZ4z39a9iA==}
@@ -5238,6 +5247,8 @@ snapshots:
   source-map-js@1.2.3: {}
 
   source-map@0.6.1: {}
+
+  sqlite-viewer@https://codeload.github.com/zaydek/sqlite-viewer/tar.gz/f5dd6afc70df7716a63e42fcf35aeaae1fd8ae22: {}
 
   stable-hash@0.0.5: {}
 

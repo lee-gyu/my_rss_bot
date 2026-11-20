@@ -49,6 +49,12 @@ pnpm start --dry-run   # 수집은 하되, 발송하지 않고 보낼 메시지�
 
 `FEATURE_SEND_CHANEL=1`로 실행하면 기존 발송 대기 글과 이번에 발송 대기로 저장된 글은 `pending`으로 남습니다. `0`으로 되돌리면 다음 실행에서 대기 중인 글도 발송합니다. `--dry-run`으로는 발송이 비활성화된 상태에서도 메시지를 미리 볼 수 있습니다.
 
+## SQLite 데이터 탐색
+
+저장소 루트에서 `pnpm db:browser`를 실행하면 `data/rss.db`를 읽기 전용으로 엽니다. 브라우저에서 `feeds`, `items`의 데이터와 스키마를 탐색하거나 조회 SQL을 실행할 수 있습니다. [SQLite Viewer 열기](http://127.0.0.1:8094/console)
+
+뷰어 작업 공간은 `data/.sqlite-viewer/`입니다. 기본 포트가 사용 중이면 `pnpm db:browser --port 8095`로 포트를 바꿀 수 있습니다. 터미널에서 `Ctrl+C`를 누르면 종료됩니다.
+
 ## 동작 방식
 
 ```

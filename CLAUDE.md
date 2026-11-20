@@ -13,6 +13,7 @@ pnpm start                 # 수집 + 발송 1회 (.env 필수: --env-file=.env)
 pnpm start --dry-run       # 수집은 실제로 저장하고, 발송만 생략해 메시지를 로그로 출력
 pnpm feed <add|list|remove|enable|disable|test> ...   # 피드 관리 CLI (src/cli.ts)
 pnpm feed test [id] [--webhook URL]   # 실제 형식의 샘플 메시지 1건 발송 (items 상태 불변)
+pnpm db:browser            # SQLite Viewer로 data/rss.db 읽기 전용 탐색
 pnpm typecheck             # tsc (noEmit, 타입 검사 전용)
 pnpm test                  # node --test "src/**/*.test.ts"
 
@@ -33,7 +34,7 @@ node --test --test-name-pattern="304" src/jobs/runOnce.test.ts  # 테스트 이�
 `.ts`를 Node가 직접 실행하므로 TypeScript 문법 중 지울 수 있는(erasable) 것만 씁니다.
 - 상대 import에는 `.ts` 확장자를 붙이고, 타입은 `import type`으로 가져옵니다(`verbatimModuleSyntax`).
 - `enum`, `namespace`, 생성자 파라미터 프로퍼티는 쓸 수 없습니다(`erasableSyntaxOnly`). 문자열 유니온을 쓰고, 클래스 필드는 명시적으로 선언합니다.
-- DB는 내장 `node:sqlite`의 **동기** API(`DatabaseSync`)입니다. 외부 의존성은 `rss-parser` 하나뿐이고, HTTP 요청은 내장 `fetch`로 직접 합니다(rss-parser는 `parseString`만 사용).
+- DB는 내장 `node:sqlite`의 **동기** API(`DatabaseSync`)입니다. 운영 의존성은 `rss-parser` 하나뿐이고, HTTP 요청은 내장 `fetch`로 직접 합니다(rss-parser는 `parseString`만 사용).
 - 사용자 메시지, 로그, 주석은 한국어로 작성합니다.
 
 ## 아키텍처

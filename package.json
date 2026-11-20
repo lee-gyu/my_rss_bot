@@ -5,6 +5,7 @@
   "scripts": {
     "start": "node --env-file=.env src/index.ts",
     "feed": "node --env-file=.env src/cli.ts",
+    "db:browser": "sqlite-viewer --db ./data/rss.db --workspace ./data/.sqlite-viewer",
     "typecheck": "tsc",
     "test": "node --test \"src/**/*.test.ts\""
   },
@@ -22,6 +23,7 @@
   "type": "module",
   "devDependencies": {
     "@types/node": "^24.13.6",
+    "sqlite-viewer": "https://codeload.github.com/zaydek/sqlite-viewer/tar.gz/f5dd6afc70df7716a63e42fcf35aeaae1fd8ae22",
     "typescript": "^5.9.3"
   },
   "dependencies": {
